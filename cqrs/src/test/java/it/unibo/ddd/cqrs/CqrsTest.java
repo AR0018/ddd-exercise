@@ -78,7 +78,10 @@ class CqrsTest {
 
     @Test
     void readerCreatedLaterReplaysHistory() {
-        // TODO: set some values, then create the reader: it must know the past too
-        fail("TODO");
+        var writer = new CounterWriterImpl(tickingClock());
+        writer.setValue(3);
+        writer.setValue(5);
+        var reader = new CounterReaderImpl(writer);
+        assertEquals(3, reader.getValue(T0));
     }
 }
