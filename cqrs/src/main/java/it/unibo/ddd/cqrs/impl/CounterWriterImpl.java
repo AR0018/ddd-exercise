@@ -1,15 +1,22 @@
 package it.unibo.ddd.cqrs.impl;
 
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 import it.unibo.ddd.Variation;
 import it.unibo.ddd.cqrs.CounterWriter;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /** Write model (cf. steps 1-2 of cqrs/walkthrough.md). */
 public class CounterWriterImpl implements CounterWriter {
     private final Clock clock;
+    private final List<Variation> variations = new ArrayList<>();
+    private final Subject<Variation> onVariation = PublishSubject.create();
 
     // TODO: add the event store, i.e. the list of variations, and a Subject to publish them (cf. CounterImpl)
     //       notice that there should be no field storing the current value
@@ -24,18 +31,20 @@ public class CounterWriterImpl implements CounterWriter {
 
     @Override
     public void setValue(long value) {
-        // TODO: compute the current value out of the last variation (or 0), then store and publish a new variation
-        throw new UnsupportedOperationException("TODO: not implemented yet");
+        final long previousValue = variations.isEmpty() ? 0
+                : variations.get(variations.size() - 1).after();
+        final var variation = Variation.of(previousValue, value, clock.instant());
+        variations.add(variation);
+        onVariation.onNext(variation);
     }
 
     @Override
     public Iterable<Variation> getVariations() {
-        // TODO: return the whole history, without letting callers modify it
-        throw new UnsupportedOperationException("TODO: not implemented yet");
+        return Collections.unmodifiableList(variations);
     }
 
     @Override
     public Observable<Variation> onVariation() {
-        throw new UnsupportedOperationException("TODO: not implemented yet");
+        return onVariation;
     }
 }
