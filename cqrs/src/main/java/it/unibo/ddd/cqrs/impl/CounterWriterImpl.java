@@ -18,9 +18,6 @@ public class CounterWriterImpl implements CounterWriter {
     private final List<Variation> variations = new ArrayList<>();
     private final Subject<Variation> onVariation = PublishSubject.create();
 
-    // TODO: add the event store, i.e. the list of variations, and a Subject to publish them (cf. CounterImpl)
-    //       notice that there should be no field storing the current value
-
     public CounterWriterImpl(Clock clock) {
         this.clock = Objects.requireNonNull(clock);
     }

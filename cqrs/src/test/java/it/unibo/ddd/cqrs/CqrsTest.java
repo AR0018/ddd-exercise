@@ -15,10 +15,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// TODO: remove @Disabled once the implementations are ready (cf. cqrs/walkthrough.md)
-// @Disabled("TODO: not implemented yet")
+// remove @Disabled once the implementations are ready (cf. cqrs/walkthrough.md)
+// @Disabled("not implemented yet")
 class CqrsTest {
     private static final Instant T0 = Instant.parse("2026-01-01T10:00:00Z");
+    private static final long DEFAULT_VALUE = 0;
 
     /** A clock that moves 1 minute ahead each time it is read. */
     private static Clock tickingClock() {
@@ -57,8 +58,15 @@ class CqrsTest {
     }
 
     @Test
+    void readerReturns0IfThereAreNoValues() {
+        var writer = new CounterWriterImpl(tickingClock());
+        var reader = new CounterReaderImpl(writer);
+        assertEquals(DEFAULT_VALUE, reader.getValue());
+        assertEquals(DEFAULT_VALUE, reader.getValue(T0));
+    }
+
+    @Test
     void readerReconstructsPastValues() {
-        final long defaultValue = 0;
         final long firstValue = 1;
         final long middleValue = 2;
         final long finalValue = 3;
@@ -68,7 +76,7 @@ class CqrsTest {
         writer.setValue(middleValue);
         writer.setValue(finalValue);
         assertEquals(finalValue, reader.getValue());
-        assertEquals(defaultValue, reader.getValue(T0.minus(Duration.ofMinutes(1))));
+        assertEquals(DEFAULT_VALUE, reader.getValue(T0.minus(Duration.ofMinutes(1))));
         assertEquals(firstValue, reader.getValue(T0));
         assertEquals(middleValue, reader.getValue(T0.plus(Duration.ofMinutes(1))));
         assertEquals(finalValue, reader.getValue(T0.plus(Duration.ofMinutes(2))));

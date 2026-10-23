@@ -4,28 +4,32 @@ import it.unibo.ddd.cqrs.CounterReader;
 import it.unibo.ddd.cqrs.CounterWriter;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.TreeMap;
 
 /** Read model (cf. steps 3-4 of cqrs/walkthrough.md). */
 public class CounterReaderImpl implements CounterReader {
-    // TODO: add a projection, i.e. a data structure optimised for queries (hint: TreeMap<Instant, Long>)
-    private TreeMap<Instant, Long> projection = new TreeMap<>();
+    private static final long INITIAL_VAL = 0;
+    private final TreeMap<Instant, Long> projection = new TreeMap<>();
 
     public CounterReaderImpl(CounterWriter writer) {
-        // TODO: replay the past variations of the writer, then subscribe to the new ones
+        // TODO: Apparently, cannot factorize the lambda because forEach() and subscribe() require two different types
+        //  of Consumer (java.unil.Consumer and io.reactivex.rxjava3.functions.Consumer).
         writer.getVariations().forEach(v -> projection.put(v.when(), v.after()));
-        writer.onVariation().subscribe();
-        throw new UnsupportedOperationException("TODO: not implemented yet");
+        var disposable = writer.onVariation().subscribe(v -> projection.put(v.when(), v.after()));
+    }
+
+    private long getEntryOrDefault(final Map.Entry<Instant, Long> entry) {
+        return entry != null ? entry.getValue() : INITIAL_VAL;
     }
 
     @Override
     public long getValue() {
-        throw new UnsupportedOperationException("TODO: not implemented yet");
+        return getEntryOrDefault(projection.lastEntry());
     }
 
     @Override
     public long getValue(Instant at) {
-        // TODO: the value of the latest variation before or at the given moment (or 0)
-        throw new UnsupportedOperationException("TODO: not implemented yet");
+        return getEntryOrDefault(projection.floorEntry(at));
     }
 }
