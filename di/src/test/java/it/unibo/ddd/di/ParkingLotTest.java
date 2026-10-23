@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // TODO: once ParkingLot supports dependency injection, rewrite these tests with test doubles (cf. step 4 of di/walkthrough.md)
 //       they should run in milliseconds, in any order, and assert exact fees
+
+//TODO: Use Mockito to create test doubles.
 class ParkingLotTest {
     @Test
     void shortStaysAreFree() throws InterruptedException {
