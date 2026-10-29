@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO: extract the dependency from system Clock
 public class PlateRegistryImpl implements PlateRegistry {
     private final Map<String, Instant> entries = new HashMap<>();
 

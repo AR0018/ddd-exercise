@@ -1,7 +1,5 @@
 package it.unibo.ddd.di;
 
-import it.unibo.ddd.di.impl.PlateRegistryImpl;
-import it.unibo.ddd.di.impl.PrintingDisplay;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,10 +9,6 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-// TODO: once ParkingLot supports dependency injection, rewrite these tests with test doubles (cf. step 4 of di/walkthrough.md)
-//       they should run in milliseconds, in any order, and assert exact fees
-
-//TODO: Use Mockito to create test doubles.
 class ParkingLotTest {
     private Display mockDisplay;
     private PlateRegistry mockRegistry;
@@ -37,13 +31,17 @@ class ParkingLotTest {
     }
 
     @Test
-    void longStaysArePaid() throws InterruptedException {
-        // TODO: mock the registry so that it returns a Duration of at least 16 minutes
-        //  and verify the fee is correct.
-        lot.enter("EF456GH");
-        Thread.sleep(3000); // ... 16 minutes would be needed to see a fee: what can we assert?
-        assertTrue(lot.exit("EF456GH").signum() >= 0);
-        verify(mockDisplay, times(2)).showMessage(anyString());
+    void longStaysArePaid() {
+        BigDecimal oneHourFee = new BigDecimal("1.50");
+        BigDecimal twoHoursFee = new BigDecimal("3.00");
+        String firstPlate = "EF456GH";
+        String secondPlate = "IJ789KL";
+        when(mockRegistry.exit(firstPlate)).thenReturn(Duration.ofMinutes(30));
+        when(mockRegistry.exit(secondPlate)).thenReturn(Duration.ofMinutes(90));
+        lot.enter(firstPlate);
+        lot.enter(secondPlate);
+        assertEquals(oneHourFee, lot.exit(firstPlate));
+        assertEquals(twoHoursFee, lot.exit(secondPlate));
     }
 
     @Test
@@ -58,9 +56,12 @@ class ParkingLotTest {
 
     @Test
     void sameCarCannotEnterTwice() {
-        var parkingLot = new ParkingLot(new PlateRegistryImpl(), mockDisplay);
-        parkingLot.enter("IL789MN");
-        assertThrows(IllegalStateException.class, () -> parkingLot.enter("IL789MN"));
+        String plate = "IL789MN";
+        doNothing()
+                .doThrow(new IllegalStateException())
+                .when(mockRegistry).enter(plate);
+        lot.enter(plate);
+        assertThrows(IllegalStateException.class, () -> lot.enter(plate));
         verify(mockDisplay).showMessage(anyString());
     }
 }
