@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -16,31 +17,43 @@ import static org.mockito.Mockito.*;
 //TODO: Use Mockito to create test doubles.
 class ParkingLotTest {
     private Display mockDisplay;
+    private PlateRegistry mockRegistry;
+    private ParkingLot lot;
 
     @BeforeEach
     void init() {
         mockDisplay = mock(Display.class);
+        mockRegistry = mock(PlateRegistry.class);
+        lot = new ParkingLot(mockRegistry, mockDisplay);
     }
 
     @Test
-    void shortStaysAreFree() throws InterruptedException {
-        var lot = new ParkingLot(new PlateRegistryImpl(), mockDisplay);
+    void shortStaysAreFree() {
+        when(mockRegistry.exit(anyString())).thenReturn(Duration.ofMinutes(5));
         String plate = "AB123CD";
         BigDecimal fee = new BigDecimal("0.00");
         lot.enter(plate);
-        Thread.sleep(3000); // let some time pass...
         assertEquals(fee, lot.exit(plate));
-        verify(mockDisplay).showMessage("Welcome, " + plate);
-        verify(mockDisplay).showMessage("Goodbye, " + plate + ": please pay " + fee + " EUR");
     }
 
     @Test
     void longStaysArePaid() throws InterruptedException {
-        var lot = new ParkingLot(new PlateRegistryImpl(), mockDisplay);
+        // TODO: mock the registry so that it returns a Duration of at least 16 minutes
+        //  and verify the fee is correct.
         lot.enter("EF456GH");
         Thread.sleep(3000); // ... 16 minutes would be needed to see a fee: what can we assert?
         assertTrue(lot.exit("EF456GH").signum() >= 0);
         verify(mockDisplay, times(2)).showMessage(anyString());
+    }
+
+    @Test
+    void messagesAreCorrectlyDisplayed() {
+        String plate = "AB123CD";
+        BigDecimal fee = new BigDecimal("0.00");
+        lot.enter(plate);
+        lot.exit(plate);
+        verify(mockDisplay).showMessage("Welcome, " + plate);
+        verify(mockDisplay).showMessage("Goodbye, " + plate + ": please pay " + fee + " EUR");
     }
 
     @Test
